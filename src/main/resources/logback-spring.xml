@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	scan：程序运行时配置文件被修改，是否重新加载，true：重新加载；false：不重新加载；默认为 true;
+	scanPeriod：监测配置文件被修改的时间间隔，默认为 1 分钟，默认单位包括：milliseconds、seconds、minutes 和 hours;
+	debug：是否打印 logback 程序运行的日志信息，默认为false;
+	格式：
+		%d{HH:mm:ss.SSS}：时间格式化，14:06:49.812；
+		%line：输出执行日志请求的行号；
+		%thread：表示产生日志的线程名；
+		%level：输出日志级别；
+		%method：输出执行日志请求的方法名;
+		%class：输出日志打印类的全限定名；
+		%-4relative含义：“-”左对齐标志，接着是可选的最小宽度修饰符，十进制表示，relative 输出从程序启动到创建日志的时间，单位毫秒;
+		%msg：表示应用程序打印的日志信息；
+		%n：表示换行符；
+		%logger{36}：class 的全名，数字代表限制最长的字符；
+ -->
+<configuration debug="false" scan="true" scanPeriod="30 seconds">
+
+    <!-- 定义常量 -->
+    <property name="env" value="dev" />
+    <property name="project" value="hk" />
+    <property name="root" value="/var/log" />
+    <property name="fileSize" value="50MB" />
+    <property name="maxHistory" value="100" />
+    <timestamp key="dateTime" datePattern="yyyy-MM-dd HH:mm:ss" />
+    <property name="pattern" value="%d{${dateTime}} %-5level %logger{36} -- %msg%n" />
+
+    <!-- 控制台打印 -->
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder charset="utf-8">
+            <pattern>${pattern}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 输入到文件，按日期和文件大小 -->
+    <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <encoder charset="utf-8">
+            <pattern>${pattern}</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${root}/${project}_${env}_%d.%i.log</fileNamePattern>
+            <maxHistory>${maxHistory}</maxHistory>
+            <timeBasedFileNamingAndTriggeringPolicy
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>${fileSize}</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+    </appender>
+
+    <!-- 指定第三方 jar 包或者自定义包的输出日志级别，additivity: false，不会打印两次 -->
+    <Logger name="org.springframework" level="DEBUG" additivity="false">
+        <appender-ref ref="console"/>
+        <appender-ref ref="file"/>
+    </Logger>
+
+    <!-- Root Logger Level: TRACE < DEBUG < INFO < WARN < ERROR -->
+    <root level="DEBUG">
+        <appender-ref ref="console" />
+        <appender-ref ref="file" />
+    </root>
+</configuration>
